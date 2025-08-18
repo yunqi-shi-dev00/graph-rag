@@ -1,0 +1,108 @@
+### GraphRAG Configuration
+### 这是一个简化的配置文件，用于快速测试
+
+### LLM settings ###
+models:
+  default_chat_model:
+    type: openai_chat
+    auth_type: api_key
+    api_key: ${OPENAI_API_KEY}  # 从.env文件读取
+    model: gpt-3.5-turbo  # 使用更经济的模型进行测试
+    model_supports_json: true
+    concurrent_requests: 5  # 降低并发以避免速率限制
+    async_mode: threaded
+    retry_strategy: native
+    max_retries: 3
+    tokens_per_minute: 10000  # 设置合理的速率限制
+    requests_per_minute: 20
+    
+  default_embedding_model:
+    type: openai_embedding
+    auth_type: api_key
+    api_key: ${OPENAI_API_KEY}
+    model: text-embedding-3-small
+    concurrent_requests: 5
+    async_mode: threaded
+    retry_strategy: native
+    max_retries: 3
+    tokens_per_minute: 10000
+    requests_per_minute: 20
+
+### Input settings ###
+input:
+  storage:
+    type: file
+    base_dir: "data"  # 输入数据目录
+  file_pattern: "*.txt"  # 只处理txt文件
+  encoding: utf-8
+  chunk_size: 1024  # 较小的块大小以加快处理
+  chunk_overlap: 128
+
+### Cache settings ###
+cache:
+  storage:
+    type: file
+    base_dir: "cache"
+
+### Storage settings ###
+storage:
+  storage:
+    type: file
+    base_dir: "storage"
+
+### Reporting settings ###
+reporting:
+  storage:
+    type: file
+    base_dir: "output"
+
+### Embeddings settings ###
+embeddings:
+  batch_size: 16  # 较小的批次大小
+  batch_max_tokens: 2048
+  target: required  # 只嵌入必需的内容
+  skip_missing_entities: false
+  strategy:
+    type: sentence_transformer  # 可选：使用本地模型以节省API调用
+
+### Chunks settings ###
+chunks:
+  size: 1024
+  overlap: 128
+  encoding_model: cl100k_base
+
+### GraphRAG settings ###
+claim_extraction:
+  enabled: false  # 禁用声明提取以加快处理
+  
+community_reports:
+  max_input_tokens: 2048
+  max_output_tokens: 1024
+
+summarize_descriptions:
+  max_input_tokens: 2048
+  
+entity_extraction:
+  entity_types:
+    - 技术
+    - 公司
+    - 产品
+    - 概念
+    - 人物
+  max_entities: 20  # 每个块最多提取20个实体
+  
+### Local search settings ###
+local_search:
+  max_data_tokens: 4096
+  temperature: 0.7
+  top_p: 0.95
+  
+### Global search settings ###
+global_search:
+  max_data_tokens: 8192
+  temperature: 0.7
+  top_p: 0.95
+  data_max_tokens: 8192
+  map_max_tokens: 2048
+  reduce_max_tokens: 4096
+  concurrency: 5
