@@ -1,0 +1,135 @@
+# GraphRAG配置文件 - PPT分析专用
+# 适用于处理中文PPT解析内容
+
+# LLM配置
+llm:
+  api_key: ${GRAPHRAG_API_KEY}  # 从环境变量读取
+  type: openai_chat  # 或 azure_openai_chat
+  model: gpt-4  # 推荐使用GPT-4以获得更好的中文理解
+  api_base: ${GRAPHRAG_API_BASE}  # API端点
+  max_tokens: 4000
+  temperature: 0.0  # 保持低温度以确保输出稳定性
+  
+# 嵌入模型配置
+embeddings:
+  enabled: true
+  llm:
+    api_key: ${GRAPHRAG_API_KEY}
+    type: openai_embedding  # 或 azure_openai_embedding
+    model: text-embedding-3-small
+    api_base: ${GRAPHRAG_API_BASE}
+
+# 输入配置
+input:
+  type: file
+  file_type: json  # 支持JSON输入
+  base_dir: ./input  # 输入文件目录
+  file_pattern: "*.json"  # 匹配所有JSON文件
+  text_column: text  # 主要文本字段名
+  title_column: title  # 标题字段名
+  encoding: utf-8  # 使用UTF-8编码支持中文
+
+# 文本分块配置（针对中文优化）
+chunks:
+  size: 1200  # 中文字符较密集，适当增加块大小
+  overlap: 100  # 重叠部分
+  group_by_columns: []
+
+# 缓存配置
+cache:
+  type: file
+  base_dir: ./cache
+
+# 存储配置
+storage:
+  type: file
+  base_dir: ./output
+
+# 报告配置
+reporting:
+  type: file
+  base_dir: ./reports
+
+# 工作流配置
+workflows:
+  - name: create_base_text_units
+  - name: create_base_extracted_entities
+  - name: create_summarized_entities
+  - name: create_base_entity_graph
+  - name: create_final_entities
+  - name: create_final_nodes
+  - name: create_final_communities
+  - name: create_final_community_reports
+  - name: create_final_text_units
+  - name: create_final_relationships
+  - name: create_final_documents
+
+# 实体提取配置（中文优化）
+entity_extraction:
+  prompt: |
+    请从以下文本中提取重要的实体和概念。特别关注：
+    1. 公司名称（如TCL、海信等）
+    2. 产品类别（如智屏、空调、冰箱、洗衣机等）
+    3. 业务指标（如营收、净利率、市占率等）
+    4. 时间周期（如2024年Q1、2023年等）
+    5. 竞争关系和市场地位
+    
+    文本：{input_text}
+    
+    请以JSON格式输出实体列表。
+  
+  entity_types:
+    - 公司
+    - 产品
+    - 指标
+    - 时间
+    - 市场
+
+# 关系提取配置
+relationship_extraction:
+  prompt: |
+    请从以下文本中提取实体之间的关系。特别关注：
+    1. 竞争关系（如TCL vs 海信）
+    2. 产品归属关系（如TCL的空调产品）
+    3. 时间关联（如2024年Q1的数据）
+    4. 指标对比关系（如营收对比、市占率对比）
+    
+    文本：{input_text}
+    实体：{entities}
+    
+    请以JSON格式输出关系列表。
+
+# 摘要生成配置
+summarization:
+  prompt: |
+    请为以下内容生成简洁的中文摘要，重点关注：
+    1. 核心业务数据和指标
+    2. 竞争力分析结论
+    3. 市场趋势和变化
+    
+    内容：{input_text}
+    
+    摘要（不超过200字）：
+
+# 社区检测配置
+community_reports:
+  max_length: 2000
+  max_input_length: 8000
+
+# 并行处理配置
+parallelization:
+  stagger: 0.3
+  num_threads: 4  # 根据需要调整
+
+# 日志配置
+logging:
+  level: INFO
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+# 提示词调优（可选）
+prompt_tuning:
+  enabled: false  # 如需启用，设为true
+  
+# 其他配置
+skip_workflows: []  # 跳过的工作流列表
+encoding_model: cl100k_base  # 用于token计算的编码模型
